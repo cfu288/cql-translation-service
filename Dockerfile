@@ -1,6 +1,9 @@
 # fetch basic image
 FROM maven:3.9.5-eclipse-temurin-11
 
+# install nginx
+RUN apt-get update && apt-get install -y nginx
+
 # application placed into /opt/app
 RUN mkdir -p /app
 WORKDIR /app
@@ -14,9 +17,12 @@ RUN mvn install
 COPY src /app/src
 RUN mvn package
 
-# local application port
-EXPOSE 8080
+# copy nginx configuration file
+COPY nginx.conf /etc/nginx
 
-# execute it
-# CMD ["mvn", "exec:java"]
-CMD ["java", "-jar", "target/cqlTranslationServer-2.4.0.jar", "-d"]
+# local application port
+EXPOSE 8000
+
+# start nginx and run the application
+CMD service nginx start && java -jar target/cqlTranslationServer-2.4.0.jar -d
+# CMD service nginx start || cat /var/log/nginx/error.log
